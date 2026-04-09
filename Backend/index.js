@@ -18,7 +18,7 @@ app.use(cookieParser())
 app.use(bodyParser.json())
 
 app.use(cors({
-  origin: frontend_uri, 
+  origin: frontend_uri,
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
@@ -54,13 +54,13 @@ app.get("/login", (req, res) => {
 
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
-      querystring.stringify({
-        response_type: "code",
-        client_id: SPOTIFY_CLIENT_ID,
-        scope: scope,
-        redirect_uri: redirect_uri,
-        state: state,
-      }),
+    querystring.stringify({
+      response_type: "code",
+      client_id: SPOTIFY_CLIENT_ID,
+      scope: scope,
+      redirect_uri: redirect_uri,
+      state: state,
+    }),
   )
 })
 
@@ -95,7 +95,6 @@ app.get("/callback", async (req, res) => {
     storedRefreshToken = tokenResponse.data.refresh_token // stores refresh token
     tokenExpiryTime = Date.now() + tokenResponse.data.expires_in * 1000 // 1 hr expiry time
 
-    console.log("tokens obtained")
 
     // Redirect back to frontend with tokens in hash
     res.redirect(
@@ -138,7 +137,6 @@ app.post("/refresh_token", async (req, res) => {
     if (!refresh_token) {
       storedAccessToken = refreshResponse.data.access_token
       tokenExpiryTime = Date.now() + refreshResponse.data.expires_in * 1000
-      console.log("Spotify token refreshed")
     }
 
     res.json({
@@ -422,49 +420,47 @@ app.get("/api/search", async (req, res) => {
 })
 
 app.get("/api/search-lyrics", async (req, res) => {
-    const trackName = req.query.trackName
-    const artistName = req.query.artistName
-  
-    if (!trackName || !artistName) {
-      return res.status(400).json({ error: "Missing trackName or artistName query parameter." })
-    }
-    if (!GOOGLE_API_KEY || !GOOGLE_CSE_ID) {
-      console.error("Google Search API Key or Search Engine ID missing for lyrics search")
-      return res.status(500).json({ error: "Server configuration error for lyrics search." })
-    }
-  
-    const query = `"${trackName}" "${artistName}" lyrics`
-  
-    try {
-      const googleApiUrl = `https://www.googleapis.com/customsearch/v1`
-      console.log(`Searching Google for lyrics query: ${query}`) // Optional logging
-      const response = await axios.get(googleApiUrl, {
-        params: {
-          key: GOOGLE_API_KEY,
-          cx: GOOGLE_CSE_ID,
-          q: query,
-          num: 5, 
-        },
-      })
-  
-      
-      const searchResults = (response.data.items || []).map((item) => ({
-        title: item.title,
-        link: item.link,
-        snippet: item.snippet,
-      }))
-  
-      console.log(`Found ${searchResults.length} potential lyrics links.`) // Optional logging
-      res.json(searchResults)
-    } catch (error) {
-      console.error(
-        "Google Lyrics Search API Error:",
-        error.response?.status,
-        error.response?.data?.error?.message || error.message,
-      )
-      res.status(error.response?.status || 500).json({ error: "Failed fetching Google search results for lyrics." })
-    }
-  })
+  const trackName = req.query.trackName
+  const artistName = req.query.artistName
+
+  if (!trackName || !artistName) {
+    return res.status(400).json({ error: "Missing trackName or artistName query parameter." })
+  }
+  if (!GOOGLE_API_KEY || !GOOGLE_CSE_ID) {
+    console.error("Google Search API Key or Search Engine ID missing for lyrics search")
+    return res.status(500).json({ error: "Server configuration error for lyrics search." })
+  }
+
+  const query = `"${trackName}" "${artistName}" lyrics`
+
+  try {
+    const googleApiUrl = `https://www.googleapis.com/customsearch/v1`
+    const response = await axios.get(googleApiUrl, {
+      params: {
+        key: GOOGLE_API_KEY,
+        cx: GOOGLE_CSE_ID,
+        q: query,
+        num: 5,
+      },
+    })
+
+
+    const searchResults = (response.data.items || []).map((item) => ({
+      title: item.title,
+      link: item.link,
+      snippet: item.snippet,
+    }))
+
+    res.json(searchResults)
+  } catch (error) {
+    console.error(
+      "Google Lyrics Search API Error:",
+      error.response?.status,
+      error.response?.data?.error?.message || error.message,
+    )
+    res.status(error.response?.status || 500).json({ error: "Failed fetching Google search results for lyrics." })
+  }
+})
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
