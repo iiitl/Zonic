@@ -15,26 +15,9 @@ import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-w
 import { GridDot } from "@/components/ui/GridDot"
 import { LyricsDisplay } from "@/components/ui/lyrics-display"
 
-interface NewsArticle {
-  title: string
-  description: string | null
-  url: string
-  source: { name: string }
-  publishedAt: string
-}
-
-interface WeatherData {
-  name: string
-  main: { temp: number; feels_like: number; humidity: number }
-  weather: { main: string; description: string; icon: string }[]
-  wind: { speed: number }
-}
-
-interface SearchResultItem {
-  title: string
-  link: string
-  snippet: string
-}
+import { NewsArticle } from "../types/spotify";
+import { WeatherData } from "../types/spotify";
+import { SearchResultItem } from "../types/spotify";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
 
