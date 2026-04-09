@@ -19,45 +19,13 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 // --- Import Player Context Hook ---
 import { usePlayerContext } from "@/context/PlayerContext" // Adjust path if needed
 
-// --- Interfaces (Keep these as they are) ---
-interface SpotifyImage {
-  url: string
-  height?: number
-  width?: number
-}
-interface Artist {
-  name: string
-  id: string
-}
-interface Album {
-  id: string
-  name: string
-  images: SpotifyImage[]
-  artists?: Artist[]
-}
-interface Track {
-  id: string
-  name: string
-  artists: Artist[]
-  album: Album
-  duration_ms: number
-  preview_url: string | null
-  uri: string
-}
-interface SavedTrackItem {
-  added_at: string
-  track: Track
-}
-interface UserPlaylist {
-  id: string
-  name: string
-  images: SpotifyImage[]
-  description: string
-  owner: { display_name: string; id: string }
-  public: boolean
-  tracks: { href: string; total: number }
-  uri: string
-}
+// --- Import Interfaces ---
+import { SpotifyImage } from "../types/spotify";
+import { Artist } from "../types/spotify";
+import { Album } from "../types/spotify";
+import { Track } from "../types/spotify";
+import { SavedTrackItem } from "../types/spotify";
+import { UserPlaylist } from "../types/spotify";
 
 // --- API Base URL ---
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
