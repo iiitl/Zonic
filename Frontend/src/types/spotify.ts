@@ -36,24 +36,3 @@ export interface UserPlaylist {
     tracks: { href: string; total: number }
     uri: string
 }
-
-export interface NewsArticle {
-    title: string
-    description: string | null
-    url: string
-    source: { name: string }
-    publishedAt: string
-}
-
-export interface WeatherData {
-    name: string
-    main: { temp: number; feels_like: number; humidity: number }
-    weather: { main: string; description: string; icon: string }[]
-    wind: { speed: number }
-}
-
-export interface SearchResultItem {
-    title: string
-    link: string
-    snippet: string
-}
