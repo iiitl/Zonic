@@ -31,10 +31,6 @@ const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY
 const GOOGLE_API_KEY = process.env.GOOGLE_SEARCH_API_KEY
 const GOOGLE_CSE_ID = process.env.GOOGLE_SEARCH_ENGINE_ID
 
-// Simple In-Memory Store
-let storedAccessToken = null
-let storedRefreshToken = null
-let tokenExpiryTime = 0
 
 app.get("/", (req, res) => {
   res.send("Welcome to the Zonic backend!")
@@ -91,15 +87,16 @@ app.get("/callback", async (req, res) => {
       },
     )
 
-    storedAccessToken = tokenResponse.data.access_token //stores access token sent by spotify
-    storedRefreshToken = tokenResponse.data.refresh_token // stores refresh token
-    tokenExpiryTime = Date.now() + tokenResponse.data.expires_in * 1000 // 1 hr expiry time
+    const access_token = tokenResponse.data.access_token //stores access token sent by spotify
+    const refresh_token = tokenResponse.data.refresh_token // stores refresh token
+    const expires_in = tokenResponse.data.expires_in
 
     // Redirect back to frontend with tokens in hash
     res.redirect(
       `${frontend_uri}/#${querystring.stringify({
-        access_token: storedAccessToken,
-        expires_in: tokenResponse.data.expires_in,
+        access_token: access_token,
+        refresh_token: refresh_token,
+        expires_in: expires_in,
       })}`,
     ) // http://localhost:5173/#access_token=BQAx...&expires_in=3600
   } catch (error) {
@@ -111,18 +108,16 @@ app.get("/callback", async (req, res) => {
 app.post("/refresh_token", async (req, res) => {
   //refresh the user's access token when it expires using a refresh token without needing the user to log in again.
   const { refresh_token } = req.body
-  if (!refresh_token && !storedRefreshToken) {
-    // Check body first, then internal store
-    return res.status(400).json({ error: "Refresh token not provided and not stored" })
+  if (!refresh_token) {
+    return res.status(400).json({ error: "Refresh token not provided" })
   }
-  const tokenToUse = refresh_token || storedRefreshToken
 
   try {
     const refreshResponse = await axios.post(
       "https://accounts.spotify.com/api/token",
       new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: tokenToUse,
+        refresh_token: refresh_token,
       }),
       {
         headers: {
@@ -132,23 +127,12 @@ app.post("/refresh_token", async (req, res) => {
       },
     )
 
-    // Update internal store if internal token was refreshed
-    if (!refresh_token) {
-      storedAccessToken = refreshResponse.data.access_token
-      tokenExpiryTime = Date.now() + refreshResponse.data.expires_in * 1000
-    }
-
     res.json({
       access_token: refreshResponse.data.access_token,
       expires_in: refreshResponse.data.expires_in,
     })
   } catch (error) {
     console.error("Error refreshing token:", error.response ? error.response.data : error.message)
-    // Clear internal tokens on failure if they were being used?
-    if (!refresh_token) {
-      storedAccessToken = null
-      tokenExpiryTime = 0
-    }
     res.status(error.response?.status || 500).json({ error: "Failed to refresh token" })
   }
 })
