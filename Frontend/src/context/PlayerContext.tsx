@@ -30,8 +30,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children }) => {
     const [playerState, setPlayerState] = useState<PlayerState>(defaultState);
 
     useEffect(() => {
-        console.log("PlayerContext STATE CHANGED:", playerState);
-    }, [playerState]); 
+    }, [playerState]);
 
     return (
         <PlayerContext.Provider value={{ playerState, setPlayerState }}>

@@ -76,16 +76,14 @@ function MusicPage() {
       setError(`Login failed: ${errorParam}. Please try again.`)
       setIsLoading(false)
     } else if (tokenFromUrl) {
-      console.log("✅ Access Token Received from URL Hash")
       localStorage.setItem("spotify_access_token", tokenFromUrl)
       setAccessToken(tokenFromUrl)
     } else {
       const storedToken = localStorage.getItem("spotify_access_token")
       if (storedToken) {
-        console.log("🔑 Using token from localStorage")
         setAccessToken(storedToken)
       } else {
-        console.log("🤷 No token found. User needs to log in.")
+
         setIsLoading(false)
       }
     }
@@ -99,7 +97,6 @@ function MusicPage() {
     setIsLoading(true)
     setError(null)
     const fetchData = async () => {
-      console.log("🚀 Fetching Spotify data...")
       try {
         const headers = { Authorization: `Bearer ${accessToken}` }
         const [likedResponse, topTracksResponse, playlistsResponse] = await Promise.all([
@@ -146,8 +143,6 @@ function MusicPage() {
   // Modify to accept necessary track details
   const handlePlayTrack = useCallback(
     (trackDetails: { uri: string; name: string; artistName: string | null }) => {
-      console.log(`▶️ Playing track: ${trackDetails.name} by ${trackDetails.artistName || "Unknown Artist"}`)
-      console.log("1. handlePlayTrack CALLED with:", trackDetails)
 
       // Update local state for the embed player
       setCurrentlyPlayingTrackUri(trackDetails.uri)
@@ -158,8 +153,6 @@ function MusicPage() {
         trackName: trackDetails.name,
         artistName: trackDetails.artistName,
       })
-
-      console.log("2. setPlayerState CALLED in handlePlayTrack")
     },
     [setPlayerState],
   ) // Add setPlayerState as a dependency
