@@ -7,7 +7,6 @@ import dotenv from "dotenv"
 import { Buffer } from "buffer"
 import crypto from "crypto"
 dotenv.config()
-import { requireAuth } from "./middleware/requireAuth.js"
 import { v4 as uuidv4 } from "uuid"
 import cookieParser from "cookie-parser"
 
@@ -212,7 +211,7 @@ app.post("/refresh_token", async (req, res) => {
 })
 
 // Apply auth middleware to Spotify proxy routes
-app.get("/user", requireAuth, async (req, res) => {
+app.get("/user", requireSpotifyCookieAuth, async (req, res) => {
   try {
     const response = await axios.get("https://api.spotify.com/v1/me", {
       //user info
@@ -227,7 +226,7 @@ app.get("/user", requireAuth, async (req, res) => {
   }
 })
 
-app.get("/playlists", requireAuth, async (req, res) => {
+app.get("/playlists", requireSpotifyCookieAuth, async (req, res) => {
   try {
     const limit = req.query.limit || 20
     const response = await axios.get("https://api.spotify.com/v1/me/playlists", {
@@ -244,7 +243,7 @@ app.get("/playlists", requireAuth, async (req, res) => {
   }
 })
 
-app.get("/liked-songs", requireAuth, async (req, res) => {
+app.get("/liked-songs", requireSpotifyCookieAuth, async (req, res) => {
   try {
     const limit = req.query.limit || 20
     const offset = req.query.offset || 0
@@ -262,7 +261,7 @@ app.get("/liked-songs", requireAuth, async (req, res) => {
   }
 })
 
-app.get("/top-tracks", requireAuth, async (req, res) => {
+app.get("/top-tracks", requireSpotifyCookieAuth, async (req, res) => {
   try {
     const limit = req.query.limit || 20
     const offset = req.query.offset || 0
@@ -282,7 +281,7 @@ app.get("/top-tracks", requireAuth, async (req, res) => {
 })
 
 // NEW ENDPOINT: Search Tracks
-app.get("/search", requireAuth, async (req, res) => {
+app.get("/search", requireSpotifyCookieAuth, async (req, res) => {
   try {
     const q = req.query.q
     const limit = req.query.limit || 20
@@ -325,7 +324,7 @@ app.get("/search", requireAuth, async (req, res) => {
 })
 
 // NEW ENDPOINT: Get Playlist Tracks
-app.get("/playlists/:playlistId/tracks", requireAuth, async (req, res) => {
+app.get("/playlists/:playlistId/tracks", requireSpotifyCookieAuth, async (req, res) => {
   try {
     const { playlistId } = req.params
     const limit = req.query.limit || 50
