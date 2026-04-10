@@ -491,7 +491,6 @@ app.get("/api/search-lyrics", async (req, res) => {
   
     try {
       const googleApiUrl = `https://www.googleapis.com/customsearch/v1`
-      console.log(`Searching Google for lyrics query: ${query}`) // Optional logging
       const response = await axios.get(googleApiUrl, {
         params: {
           key: GOOGLE_API_KEY,
@@ -507,8 +506,6 @@ app.get("/api/search-lyrics", async (req, res) => {
         link: item.link,
         snippet: item.snippet,
       }))
-  
-      console.log(`Found ${searchResults.length} potential lyrics links.`) // Optional logging
       res.json(searchResults)
     } catch (error) {
       console.error(
