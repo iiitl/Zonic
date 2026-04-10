@@ -95,8 +95,6 @@ app.get("/callback", async (req, res) => {
     storedRefreshToken = tokenResponse.data.refresh_token // stores refresh token
     tokenExpiryTime = Date.now() + tokenResponse.data.expires_in * 1000 // 1 hr expiry time
 
-    console.log("tokens obtained")
-
     // Redirect back to frontend with tokens in hash
     res.redirect(
       `${frontend_uri}/#${querystring.stringify({
@@ -138,7 +136,6 @@ app.post("/refresh_token", async (req, res) => {
     if (!refresh_token) {
       storedAccessToken = refreshResponse.data.access_token
       tokenExpiryTime = Date.now() + refreshResponse.data.expires_in * 1000
-      console.log("Spotify token refreshed")
     }
 
     res.json({
@@ -437,7 +434,6 @@ app.get("/api/search-lyrics", async (req, res) => {
   
     try {
       const googleApiUrl = `https://www.googleapis.com/customsearch/v1`
-      console.log(`Searching Google for lyrics query: ${query}`) // Optional logging
       const response = await axios.get(googleApiUrl, {
         params: {
           key: GOOGLE_API_KEY,
@@ -453,8 +449,6 @@ app.get("/api/search-lyrics", async (req, res) => {
         link: item.link,
         snippet: item.snippet,
       }))
-  
-      console.log(`Found ${searchResults.length} potential lyrics links.`) // Optional logging
       res.json(searchResults)
     } catch (error) {
       console.error(

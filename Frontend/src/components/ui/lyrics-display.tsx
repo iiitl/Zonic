@@ -46,11 +46,9 @@ export function LyricsDisplay({ trackName, artistName }: LyricsDisplayProps) {
     setSearchAttempted(true) // Mark that search has been attempted
 
     try {
-      console.log(`Frontend: Requesting lyrics search for "${trackName}" by ${artistName}`)
       const response = await axios.get<SearchResultItem[]>(`${API_BASE_URL}/api/search-lyrics`, {
         params: { trackName, artistName },
       })
-      console.log(`Frontend: Received ${response.data.length} results.`)
       setLyricsSearchResults(response.data)
       if (response.data.length === 0) {
         setLyricsSearchError("No relevant lyrics links found.")
