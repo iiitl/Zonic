@@ -27,9 +27,13 @@ interface PlayerProviderProps {
 
 
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children }) => {
-    const [playerState, setPlayerState] = useState<PlayerState>(defaultState);
+    const [playerState, setPlayerState] = useState<PlayerState>(() => {
+        const savedState = localStorage.getItem('player_state');
+        return savedState ? JSON.parse(savedState) : defaultState;
+    });
 
     useEffect(() => {
+        localStorage.setItem('player_state', JSON.stringify(playerState));
     }, [playerState]);
 
     return (
