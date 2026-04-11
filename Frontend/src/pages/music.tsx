@@ -14,7 +14,9 @@ import { PodcastEmptyPlaceholder } from "@/components/ui/podcast-empty-placehold
 import { TrackListItem } from "@/components/ui/track-list-item"
 import { Sidebar } from "@/components/ui/sidebar"
 import { FaPlay } from "react-icons/fa"
+import { Skeleton } from "@/registry/ui/skeleton"
 import { ArrowLeft, Loader2 } from "lucide-react"
+
 
 // --- Import Player Context Hook ---
 import { usePlayerContext } from "@/context/PlayerContext" // Adjust path if needed
@@ -250,10 +252,41 @@ function MusicPage() {
     )
   }
 
-  // Loading Screen
+ // Loading Screen
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-black text-white text-xl">Loading your music...</div>
+      <div className="flex flex-col h-screen bg-background p-8 space-y-8">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-10 w-64" />
+        </div>
+        
+        <div className="flex gap-8 h-full">
+          {/* Sidebar Placeholder */}
+          <div className="hidden lg:block w-64 space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-8 w-full" />
+          </div>
+
+          {/* Main Content Placeholder */}
+          <div className="flex-grow space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Separator />
+            <div className="flex space-x-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="h-[260px] w-[200px] rounded-md" />
+                  <Skeleton className="h-4 w-[150px]" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     )
   }
 
