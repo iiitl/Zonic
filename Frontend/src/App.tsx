@@ -7,6 +7,17 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { PlayerProvider, usePlayerContext } from "./context/PlayerContext"; // Import usePlayerContext
 import MusicPage from "@/pages/music";
 import InsightsPage from "@/pages/insights";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+});
 
 
 // --- Import or Define SpotifyEmbedPlayer here ---
@@ -25,7 +36,8 @@ function GlobalPlayer() {
 function App() {
   return (
     <ThemeProvider>
-      <PlayerProvider> {/* Provider wraps everything */}
+      <QueryClientProvider client={queryClient}>
+        <PlayerProvider> {/* Provider wraps everything */}
         <Router>
           {/* Define the Routes - Pages will render here */}
           <Routes>
@@ -40,6 +52,7 @@ function App() {
 
         </Router>
       </PlayerProvider>
+      </QueryClientProvider>
       {/* <CustomCursor />  */}
     </ThemeProvider>
   );
