@@ -25,12 +25,28 @@ interface PlayerProviderProps {
 
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children }) => {
     const [playerState, setPlayerState] = useState<PlayerState>(() => {
-        const savedState = localStorage.getItem('playerState');
-        return savedState ? JSON.parse(savedState) : defaultState;
+        if(typeof window === 'undefined'){
+            return defaultState;
+        }
+    
+        try{
+            const savedState = window.localStorage.getItem('playerState');
+            return savedState ? JSON.parse(savedState) : defaultState;
+        } catch (error) {
+            return defaultState;
+        }
     });
 
     useEffect(() => {
-        localStorage.setItem('playerState', JSON.stringify(playerState));
+        if(typeof window === 'undefined'){
+            return;
+        }
+
+        try {
+            window.localStorage.setItem('playerState', JSON.stringify(playerState));
+        } catch (error) {
+            console.error("Storage failed:", error);
+        }
     }, [playerState]);
 
     return (
