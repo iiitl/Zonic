@@ -8,28 +8,45 @@ interface PlayerState {
 
 interface PlayerContextProps {
     playerState: PlayerState;
-    setPlayerState: Dispatch<SetStateAction<PlayerState>>; // Allows updating the state
+    setPlayerState: Dispatch<SetStateAction<PlayerState>>;
 }
 
-// Initial default state when the app loads or no track is selected
 const defaultState: PlayerState = {
     trackUri: null,
     trackName: null,
     artistName: null,
 };
 
-const PlayerContext = createContext<PlayerContextProps | undefined>(undefined);  //context (initially undefined)
+const PlayerContext = createContext<PlayerContextProps | undefined>(undefined);
 
-// Define props for the Provider component
 interface PlayerProviderProps {
     children: ReactNode;
 }
 
-
 export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children }) => {
-    const [playerState, setPlayerState] = useState<PlayerState>(defaultState);
+    const [playerState, setPlayerState] = useState<PlayerState>(() => {
+        if(typeof window === 'undefined'){
+            return defaultState;
+        }
+    
+        try{
+            const savedState = window.localStorage.getItem('playerState');
+            return savedState ? JSON.parse(savedState) : defaultState;
+        } catch (error) {
+            return defaultState;
+        }
+    });
 
     useEffect(() => {
+        if(typeof window === 'undefined'){
+            return;
+        }
+
+        try {
+            window.localStorage.setItem('playerState', JSON.stringify(playerState));
+        } catch (error) {
+            console.error("Storage failed:", error);
+        }
     }, [playerState]);
 
     return (
@@ -39,7 +56,7 @@ export const PlayerProvider: React.FC<PlayerProviderProps> = ({ children }) => {
     );
 };
 
-export const usePlayerContext = (): PlayerContextProps => { //custom hook
+export const usePlayerContext = (): PlayerContextProps => {
     const context = useContext(PlayerContext);
     if (context === undefined) {
         throw new Error('usePlayerContext must be used within a PlayerProvider');
