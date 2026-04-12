@@ -9,10 +9,10 @@ import { Button } from "@/registry/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/registry/ui/tabs"
 
 import { AlbumArtwork } from "@/components/ui/album-artwork"
-import { Menu } from "@/components/ui/menu"
 import { PodcastEmptyPlaceholder } from "@/components/ui/podcast-empty-placeholder"
 import { TrackListItem } from "@/components/ui/track-list-item"
-import { Sidebar } from "@/components/ui/sidebar"
+import { useOutletContext } from "react-router-dom"
+import { LayoutContextType } from "@/components/layout/AppLayout"
 import { FaPlay } from "react-icons/fa"
 import { ArrowLeft, Loader2 } from "lucide-react"
 
@@ -32,9 +32,17 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
 
 // --- Main Music Page Component ---
 function MusicPage() {
+  const {
+    searchQuery,
+    setSearchQuery,
+    userPlaylists,
+    setUserPlaylists,
+    setHandleSearch,
+    setHandlePlaylistSelect,
+  } = useOutletContext<LayoutContextType>();
+
   // --- State ---
   const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [userPlaylists, setUserPlaylists] = useState<UserPlaylist[]>([])
   const [likedTracks, setLikedTracks] = useState<Track[]>([])
   const [topTracks, setTopTracks] = useState<Track[]>([])
 
@@ -43,7 +51,6 @@ function MusicPage() {
   const [_currentlyPlayingTrackUri, setCurrentlyPlayingTrackUri] = useState<string | null>(null)
 
   // New state for search functionality
-  const [searchQuery, setSearchQuery] = useState<string>("")
   const [searchResults, setSearchResults] = useState<Track[]>([])
   const [isSearching, setIsSearching] = useState<boolean>(false)
 
@@ -158,7 +165,7 @@ function MusicPage() {
   ) // Add setPlayerState as a dependency
 
   // New function to handle search
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim() || !accessToken) return
 
     setIsSearching(true)
@@ -185,10 +192,10 @@ function MusicPage() {
     } finally {
       setIsSearching(false)
     }
-  }
+  }, [searchQuery, accessToken])
 
   // New function to handle playlist selection
-  const handlePlaylistSelect = async (playlistId: string, playlistName: string) => {
+  const handlePlaylistSelect = useCallback(async (playlistId: string, playlistName: string) => {
     if (!accessToken) return
 
     setIsLoadingPlaylist(true)
@@ -216,7 +223,16 @@ function MusicPage() {
     } finally {
       setIsLoadingPlaylist(false)
     }
-  }
+  }, [accessToken])
+
+  // Register layout callbacks
+  useEffect(() => {
+    setHandleSearch(() => handleSearch)
+  }, [handleSearch, setHandleSearch])
+
+  useEffect(() => {
+    setHandlePlaylistSelect(() => handlePlaylistSelect)
+  }, [handlePlaylistSelect, setHandlePlaylistSelect])
 
   // Function to clear search and playlist selection
   const handleBackToMain = () => {
@@ -259,30 +275,10 @@ function MusicPage() {
 
   // Main Authenticated UI
   return (
-    <>
-      {/* Mobile Fallback  */}
-      <div className="md:hidden">
-        {/* ... (mobile fallback JSX remains the same) ... */}
-        <p className="p-4 text-center bg-black text-white h-screen flex items-center justify-center">
-          This experience is designed for larger screens.
-        </p>
-      </div>
-
-      {/* Main Desktop Layout */}
-      <div className="md:block h-screen flex flex-col">
-        <Menu searchQuery={searchQuery} onSearchChange={setSearchQuery} onSearchSubmit={handleSearch} />
-        <div className="border-t flex-grow overflow-hidden">
-          <div className="bg-background h-full">
-            <div className="grid lg:grid-cols-5 h-full">
-              <Sidebar
-                playlists={userPlaylists}
-                className="hidden lg:block h-full overflow-y-auto"
-                onPlaylistSelect={handlePlaylistSelect}
-              />
-              <div className="col-span-3 lg:col-span-4 lg:border-l h-full flex flex-col">
-                <div className="flex-grow overflow-y-auto px-4 py-6 lg:px-8 pb-[90px]">
-                  <Tabs defaultValue="music" className="h-full space-y-6">
-                    {/* Tabs Header (Keep as is) */}
+    <div className="px-4 py-6 lg:px-8 pb-[90px]">
+      {/* Main Content Layout */}
+      <Tabs defaultValue="music" className="h-full space-y-6">
+        {/* Tabs Header (Keep as is) */}
                     <div className="space-between flex items-center">
                       {/* ... (tabs header JSX remains the same) ... */}
                       <TabsList>
@@ -463,19 +459,8 @@ function MusicPage() {
                       )}
                     </TabsContent>
 
-                    {/* Podcasts Tab Content (Keep as is) */}
-                    <TabsContent value="podcasts" className="h-full flex-col border-none p-0 data-[state=active]:flex">
-                      {/* ... (podcast placeholder JSX remains the same) ... */}
-                      <PodcastEmptyPlaceholder />
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+      </Tabs>
+    </div>
   )
 }
 

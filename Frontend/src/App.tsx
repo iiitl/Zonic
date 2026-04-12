@@ -1,26 +1,11 @@
-// src/App.tsx
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import "./App.css";
 import { ThemeProvider } from "./context/ThemeContext";
-import { PlayerProvider, usePlayerContext } from "./context/PlayerContext"; // Import usePlayerContext
+import { PlayerProvider } from "./context/PlayerContext"; 
 import MusicPage from "@/pages/music";
 import InsightsPage from "@/pages/insights";
-
-
-// --- Import or Define SpotifyEmbedPlayer here ---
-import SpotifyEmbedPlayer from "@/components/ui/spotify-embed-player";
-// --------------------------------------------------
-
-
-// --- New component to render the player using context ---
-function GlobalPlayer() {
-    const { playerState } = usePlayerContext(); // Get state from context
-    return <SpotifyEmbedPlayer trackUri={playerState.trackUri} />;
-}
-// --------------------------------------------------
-
+import { AppLayout } from "@/components/layout/AppLayout";
 
 function App() {
   return (
@@ -29,15 +14,12 @@ function App() {
         <Router>
           {/* Define the Routes - Pages will render here */}
           <Routes>
-            <Route path="/" element={<MusicPage />} />
-            <Route path="/insights" element={<InsightsPage />} />
-            {/* <Route path="*" element={<NotFoundPage />} /> */}
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<MusicPage />} />
+              <Route path="/insights" element={<InsightsPage />} />
+              {/* <Route path="*" element={<NotFoundPage />} /> */}
+            </Route>
           </Routes>
-
-          {/* Render the player OUTSIDE Routes */}
-          {/* It will persist across page navigations */}
-          <GlobalPlayer /> {/* <-- Render the player using context */}
-
         </Router>
       </PlayerProvider>
       {/* <CustomCursor />  */}
@@ -46,3 +28,4 @@ function App() {
 }
 
 export default App;
+
