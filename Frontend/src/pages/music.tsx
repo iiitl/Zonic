@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import axios, { type AxiosError } from "axios"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Switch } from "@/components/ui/switch"
 import { ScrollArea, ScrollBar } from "@/registry/ui/scroll-area"
 import { Separator } from "@/registry/ui/separator"
@@ -38,6 +38,7 @@ function MusicPage() {
   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [_currentlyPlayingTrackUri, setCurrentlyPlayingTrackUri] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   // New state for search functionality
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -88,61 +89,59 @@ function MusicPage() {
     }
   }, []) // Empty dependency array is intentional here
 
-  const queryHeaders = { Authorization: `Bearer ${accessToken}` };
+  const queryHeaders = { Authorization: `Bearer ${accessToken}` }
   const handleQueryError = (err: unknown) => {
     if (axios.isAxiosError(err) && err.response?.status === 401) {
-      setError("Your session expired. Please log in again.");
-      localStorage.removeItem("spotify_access_token");
-      setAccessToken(null);
-    } else if (!error) {
-      setError("Failed to load music data.");
+      setError("Your session expired. Please log in again.")
+      queryClient.clear()
+      localStorage.removeItem("spotify_access_token")
+      setAccessToken(null)
+    } else {
+      setError((prev) => prev ?? "Failed to load music data.")
     }
-  };
+  }
 
   const { data: likedTracks = [], isLoading: isLoadingLiked } = useQuery({
-    queryKey: ['liked-songs', accessToken],
+    queryKey: ["liked-songs"],
     queryFn: async () => {
       try {
-        const res = await axios.get<SavedTrackItem[]>(`${API_BASE_URL}/liked-songs`, { headers: queryHeaders, params: { limit: 10 } });
-        return res.data.map((item: SavedTrackItem) => item.track);
+        const res = await axios.get<SavedTrackItem[]>(`${API_BASE_URL}/liked-songs`, { headers: queryHeaders, params: { limit: 10 } })
+        return res.data.map((item: SavedTrackItem) => item.track)
       } catch (err) {
-        handleQueryError(err);
-        throw err;
+        handleQueryError(err)
+        throw err
       }
     },
     enabled: !!accessToken,
-    staleTime: 1000 * 60 * 5,
-  });
+  })
 
   const { data: topTracks = [], isLoading: isLoadingTop } = useQuery({
-    queryKey: ['top-tracks', accessToken],
+    queryKey: ["top-tracks"],
     queryFn: async () => {
       try {
-        const res = await axios.get<Track[]>(`${API_BASE_URL}/top-tracks`, { headers: queryHeaders, params: { limit: 10, time_range: "short_term" } });
-        return res.data;
+        const res = await axios.get<Track[]>(`${API_BASE_URL}/top-tracks`, { headers: queryHeaders, params: { limit: 10, time_range: "short_term" } })
+        return res.data
       } catch (err) {
-        handleQueryError(err);
-        throw err;
+        handleQueryError(err)
+        throw err
       }
     },
     enabled: !!accessToken,
-    staleTime: 1000 * 60 * 5,
-  });
+  })
 
   const { data: userPlaylists = [], isLoading: isLoadingPlaylists } = useQuery({
-    queryKey: ['playlists', accessToken],
+    queryKey: ["playlists"],
     queryFn: async () => {
       try {
-        const res = await axios.get<UserPlaylist[]>(`${API_BASE_URL}/playlists`, { headers: queryHeaders, params: { limit: 20 } });
-        return res.data;
+        const res = await axios.get<UserPlaylist[]>(`${API_BASE_URL}/playlists`, { headers: queryHeaders, params: { limit: 20 } })
+        return res.data
       } catch (err) {
-        handleQueryError(err);
-        throw err;
+        handleQueryError(err)
+        throw err
       }
     },
     enabled: !!accessToken,
-    staleTime: 1000 * 60 * 5,
-  });
+  })
 
   const isLoadingData = Boolean(accessToken && (isLoadingLiked || isLoadingTop || isLoadingPlaylists));
   const isLoading = isLoadingAuth || isLoadingData;
