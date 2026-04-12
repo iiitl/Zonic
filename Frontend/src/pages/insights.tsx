@@ -14,6 +14,7 @@ import { usePlayerContext } from "@/context/PlayerContext"
 import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-with-collision"
 import { GridDot } from "@/components/ui/GridDot"
 import { LyricsDisplay } from "@/components/ui/lyrics-display"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface NewsArticle {
   title: string
@@ -44,7 +45,7 @@ const WeatherDisplay: React.FC<{
   error: string | null
   onRefresh: () => void
 }> = ({ weather, loading, error, onRefresh }) => {
-  if (loading) return <div className="text-xs text-muted-foreground animate-pulse px-2">Loading...</div>
+  if (loading) return <Skeleton className="h-6 w-24 rounded-full" />;
   if (!weather || error)
     return (
       <Button
@@ -82,8 +83,8 @@ const ArtistNews: React.FC<{
   if (loading)
     return (
       <div className="space-y-2 p-2">
-        <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-        <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
       </div>
     )
   if (!articles || articles.length === 0)
@@ -124,11 +125,7 @@ const MoodGif: React.FC<{
 }> = ({ gifUrl, loading, searchTerm }) => {
   if (!searchTerm && !loading) return null
   if (loading)
-    return (
-      <div className="h-32 w-full bg-muted rounded flex items-center justify-center text-xs text-muted-foreground animate-pulse">
-        Loading GIF...
-      </div>
-    )
+    return <Skeleton className="h-32 w-full rounded" />
   if (!gifUrl)
     return (
       <div className="h-32 w-full bg-muted/50 rounded flex items-center justify-center text-xs text-muted-foreground italic">
@@ -155,8 +152,8 @@ const SearchResultsDisplay: React.FC<{
   if (loading)
     return (
       <div className="space-y-1 mt-2">
-        <div className="h-3 bg-muted rounded w-3/4 animate-pulse"></div>
-        <div className="h-3 bg-muted rounded w-1/2 animate-pulse"></div>
+        <Skeleton className="h-3 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
       </div>
     )
   if (query && (!results || results.length === 0))
