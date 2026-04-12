@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import axios, { type AxiosError } from "axios"
+import { useQuery } from "@tanstack/react-query"
 import { Switch } from "@/components/ui/switch"
 import { ScrollArea, ScrollBar } from "@/registry/ui/scroll-area"
 import { Separator } from "@/registry/ui/separator"
@@ -34,11 +35,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
 function MusicPage() {
   // --- State ---
   const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [userPlaylists, setUserPlaylists] = useState<UserPlaylist[]>([])
-  const [likedTracks, setLikedTracks] = useState<Track[]>([])
-  const [topTracks, setTopTracks] = useState<Track[]>([])
-
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [_currentlyPlayingTrackUri, setCurrentlyPlayingTrackUri] = useState<string | null>(null)
 
@@ -63,7 +60,7 @@ function MusicPage() {
     window.location.hash = "" // Clear hash
 
     if (accessToken) {
-      setIsLoading(false)
+      setIsLoadingAuth(false)
       return
     }
 
@@ -74,70 +71,81 @@ function MusicPage() {
     if (errorParam) {
       console.error("Spotify Login Error:", errorParam)
       setError(`Login failed: ${errorParam}. Please try again.`)
-      setIsLoading(false)
+      setIsLoadingAuth(false)
     } else if (tokenFromUrl) {
       localStorage.setItem("spotify_access_token", tokenFromUrl)
       setAccessToken(tokenFromUrl)
+      setIsLoadingAuth(false)
     } else {
       const storedToken = localStorage.getItem("spotify_access_token")
       if (storedToken) {
         setAccessToken(storedToken)
+        setIsLoadingAuth(false)
       } else {
 
-        setIsLoading(false)
+        setIsLoadingAuth(false)
       }
     }
   }, []) // Empty dependency array is intentional here
 
-  // Fetch Data when Access Token is Available
-  useEffect(() => {
-    if (!accessToken) {
-      return
+  const queryHeaders = { Authorization: `Bearer ${accessToken}` };
+  const handleQueryError = (err: unknown) => {
+    if (axios.isAxiosError(err) && err.response?.status === 401) {
+      setError("Your session expired. Please log in again.");
+      localStorage.removeItem("spotify_access_token");
+      setAccessToken(null);
+    } else if (!error) {
+      setError("Failed to load music data.");
     }
-    setIsLoading(true)
-    setError(null)
-    const fetchData = async () => {
+  };
+
+  const { data: likedTracks = [], isLoading: isLoadingLiked } = useQuery({
+    queryKey: ['liked-songs', accessToken],
+    queryFn: async () => {
       try {
-        const headers = { Authorization: `Bearer ${accessToken}` }
-        const [likedResponse, topTracksResponse, playlistsResponse] = await Promise.all([
-          axios.get<SavedTrackItem[]>(`${API_BASE_URL}/liked-songs`, { headers, params: { limit: 10 } }),
-          axios.get<Track[]>(`${API_BASE_URL}/top-tracks`, {
-            headers,
-            params: { limit: 10, time_range: "short_term" },
-          }),
-          axios.get<UserPlaylist[]>(`${API_BASE_URL}/playlists`, { headers, params: { limit: 20 } }),
-        ])
-        setLikedTracks(likedResponse.data.map((item) => item.track))
-        setTopTracks(topTracksResponse.data)
-        setUserPlaylists(playlistsResponse.data)
-      } catch (err: unknown) {
-        console.error("❌ Error fetching data:", err)
-        let errorMessage = "Failed to load music data."
-        if (axios.isAxiosError(err)) {
-          const axiosError = err as AxiosError<{ error?: string | { message?: string } }>
-          let specificError = "An unknown API error occurred."
-          if (typeof axiosError.response?.data?.error === "string") specificError = axiosError.response.data.error
-          else if (typeof axiosError.response?.data?.error?.message === "string")
-            specificError = axiosError.response.data.error.message
-          else if (axiosError.message) specificError = axiosError.message
-          errorMessage = `API Error (${axiosError.response?.status || "Network Error"}): ${specificError}`
-          if (axiosError.response?.status === 401) {
-            errorMessage = "Your session expired. Please log in again."
-            setError(errorMessage)
-            localStorage.removeItem("spotify_access_token")
-            setAccessToken(null)
-            return
-          }
-        } else if (err instanceof Error) {
-          errorMessage = err.message
-        }
-        setError(errorMessage)
-      } finally {
-        setIsLoading(false)
+        const res = await axios.get<SavedTrackItem[]>(`${API_BASE_URL}/liked-songs`, { headers: queryHeaders, params: { limit: 10 } });
+        return res.data.map((item: SavedTrackItem) => item.track);
+      } catch (err) {
+        handleQueryError(err);
+        throw err;
       }
-    }
-    fetchData()
-  }, [accessToken])
+    },
+    enabled: !!accessToken,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: topTracks = [], isLoading: isLoadingTop } = useQuery({
+    queryKey: ['top-tracks', accessToken],
+    queryFn: async () => {
+      try {
+        const res = await axios.get<Track[]>(`${API_BASE_URL}/top-tracks`, { headers: queryHeaders, params: { limit: 10, time_range: "short_term" } });
+        return res.data;
+      } catch (err) {
+        handleQueryError(err);
+        throw err;
+      }
+    },
+    enabled: !!accessToken,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: userPlaylists = [], isLoading: isLoadingPlaylists } = useQuery({
+    queryKey: ['playlists', accessToken],
+    queryFn: async () => {
+      try {
+        const res = await axios.get<UserPlaylist[]>(`${API_BASE_URL}/playlists`, { headers: queryHeaders, params: { limit: 20 } });
+        return res.data;
+      } catch (err) {
+        handleQueryError(err);
+        throw err;
+      }
+    },
+    enabled: !!accessToken,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const isLoadingData = Boolean(accessToken && (isLoadingLiked || isLoadingTop || isLoadingPlaylists));
+  const isLoading = isLoadingAuth || isLoadingData;
 
   // --- Playback Handler ---
   // Modify to accept necessary track details
